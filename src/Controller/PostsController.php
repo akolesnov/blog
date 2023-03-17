@@ -58,10 +58,39 @@ class PostsController extends AbstractController
     }
 
     #[Route('/posts/{slug}', name: 'blog_show')]
-    public function post(Post $post)
+    public function post(Post $post): Response
     {
         return $this->render('posts/show.html.twig', [
             'post' => $post
         ]);
+    }
+
+    #[Route('/posts/{slug}/edit', name: 'blog_post_edit')]
+    public function edit(Post $post, Request $request, Slugify $slugify): Response
+    {
+        $form = $this->createForm(PostType::class, $post);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $post->setSlug($slugify->slugify($post->getTitle()));
+            $this->entityManager->flush();
+
+            return $this->redirectToRoute('blog_show', [
+                'slug' => $post->getSlug()
+            ]);
+        }
+
+        return $this->render('posts/new.html.twig', [
+            'form' => $form->createView()
+        ]);
+    }
+
+    #[Route('/posts/{slug}/delete', name: 'blog_post_delete')]
+    public function delete(Post $post): Response
+    {
+        $this->entityManager->remove($post);
+        $this->entityManager-> flush();
+
+        return $this->redirectToRoute('blog_posts');
     }
 }
