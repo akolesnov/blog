@@ -10,7 +10,14 @@ class Mailer
 {
     public const FROM_ADDRESS = 'a.kolesnov@yandex.ru';
 
-    public function sendConfirmationMessage(MailerInterface $mailer, User $user): void
+    private MailerInterface $mailer;
+
+    public function __construct(MailerInterface $mailer)
+    {
+        $this->mailer = $mailer;
+    }
+
+    public function sendConfirmationMessage(User $user): void
     {
         $email = (new TemplatedEmail())
             ->from(self::FROM_ADDRESS)
@@ -19,6 +26,6 @@ class Mailer
             ->htmlTemplate('security/confirmation.html.twig')
             ->context(['user' => $user]);
 
-        $mailer->send($email);
+        $this->mailer->send($email);
     }
 }

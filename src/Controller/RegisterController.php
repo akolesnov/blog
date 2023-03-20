@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Form\UserType;
+use App\Repository\UserRepository;
 use App\Service\CodeGenerator;
 use App\Service\Mailer;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,13 +16,18 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class RegisterController extends AbstractController
 {
+    private EntityManagerInterface $entityManager;
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+
     #[Route('/register', name: 'blog_register')]
     public function register(
         UserPasswordHasherInterface $passwordHasher,
         Request $request,
         CodeGenerator $codeGenerator,
         Mailer $mailer,
-        EntityManagerInterface $entityManager
     ): Response
     {
         $user = new User();
@@ -42,14 +49,32 @@ class RegisterController extends AbstractController
             $user->setPassword($password);
             $user->setConfirmationCode($codeGenerator->getConfirmationCode());
 
-            $entityManager->persist($user);
-            $entityManager->flush();
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
 
             $mailer->sendConfirmationMessage($user);
         }
 
         return $this->render('security/register.html.twig', [
             'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/confirm/{code}', name: 'email_confirmation')]
+    public function confirmEmail(UserRepository $userRepository, string $code): Response
+    {
+        $user = $userRepository->findOneBy(['confirmationCode' => $code]);
+
+        if ($user === null) {
+            return new Response('404');
+        }
+        $user->setEnabled(true);
+        $user->setConfirmationCode('');
+
+        $this->entityManager->flush();
+
+        return $this->render('/security/account_confirm.html.twig', [
+            'user' => $user
         ]);
     }
 }

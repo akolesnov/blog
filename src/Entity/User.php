@@ -5,13 +5,14 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use phpDocumentor\Reflection\Types\Boolean;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[UniqueEntity('email')]
-class User implements UserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     public const ROLE_USER = 'ROLE_USER';
 
@@ -94,12 +95,12 @@ class User implements UserInterface
 
     public function getPlainPassword(): ?string
     {
-        return $this->plain_password;
+        return $this->plainPassword;
     }
 
-    public function setPlainPassword(string $plain_password): self
+    public function setPlainPassword(string $plainPassword): self
     {
-        $this->plain_password = $plain_password;
+        $this->plainPassword = $plainPassword;
 
         return $this;
     }
