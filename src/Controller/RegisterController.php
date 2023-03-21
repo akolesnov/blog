@@ -3,12 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Event\RegisteredUserEvent;
 use App\Form\UserType;
 use App\Repository\UserRepository;
 use App\Service\CodeGenerator;
-use App\Service\Mailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -27,8 +28,8 @@ class RegisterController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         Request $request,
         CodeGenerator $codeGenerator,
-        Mailer $mailer,
-    ): Response
+        EventDispatcherInterface $eventDispatcher
+        ): Response
     {
         $user = new User();
         $form = $this->createForm(
@@ -52,7 +53,8 @@ class RegisterController extends AbstractController
             $this->entityManager->persist($user);
             $this->entityManager->flush();
 
-            $mailer->sendConfirmationMessage($user);
+            $userRegisteredEvent = new RegisteredUserEvent($user);
+            $eventDispatcher->dispatch($userRegisteredEvent, RegisteredUserEvent::NAME);
         }
 
         return $this->render('security/register.html.twig', [
