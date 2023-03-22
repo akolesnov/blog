@@ -18,12 +18,11 @@ security:
             lazy: true
             provider: users_in_memory
 
-            main:
-                form_login:
-                    login_path: login
-                    check_path: login
-                logout:
-                    path: logout
+            form_login:
+                login_path: login
+                check_path: login
+            logout:
+                path: logout
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
