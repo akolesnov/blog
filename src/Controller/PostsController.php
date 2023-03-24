@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\Comment;
 use App\Entity\Post;
+use App\Form\CommentType;
 use App\Form\PostType;
 use App\Repository\PostRepository;
 use Cocur\Slugify\Slugify;
@@ -103,5 +105,28 @@ class PostsController extends AbstractController
         $this->entityManager-> flush();
 
         return $this->redirectToRoute('blog_posts');
+    }
+
+    #[Route('/post/{slug}', methods: ['POST'], name: 'comment_new')]
+    public function commentNew(Post $post, Request $request): Response
+    {
+        $comment = new Comment();
+        $comment->setAuthor($this->getUser());
+        $post->addComment($comment);
+
+        $form = $this->createForm(CommentType::class, $comment);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->persist($comment);
+            $this->entityManager->flush();
+        
+            return $this->redirectToRoute('post_show', ['slug' => $post->getSlug()]);
+        }
+
+        return $this->render('/post/show.html.twig', [
+            'post' => $post,
+            'form' => $form->createView()
+        ]);
+
     }
 }
