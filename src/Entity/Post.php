@@ -12,7 +12,7 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity()]
-#[ORM\Table(name: 'post')]
+#[ORM\Table(name: 'posts')]
 #[ORM\Index(columns: ['author_id'])]
 #[ORM\Index(columns: ['status'])]
 #[ORM\Index(columns: ['created_at'])]
