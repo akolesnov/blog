@@ -55,10 +55,15 @@ class Post
     #[ORM\OneToMany(mappedBy: 'post', targetEntity: Comment::class)]
     private Collection $comments;
 
+    #[ORM\ManyToMany(targetEntity: Category::class, cascade: ['persist'])]
+    #[ORM\JoinTable(name: 'post_categories')]
+    private Collection $categories;
+
     private function __construct()
     {
         $this->id = Uuid::v4();
         $this->createdAt = new \DateTimeImmutable('now', new \DateTimeZone('Europe/Moscow'));
+        $this->categories = new ArrayCollection();
     }
 
     public function getId(): Uuid
@@ -155,5 +160,29 @@ class Post
         $post->status = self::PUBLISHED;
         
         return $post;
+    }
+
+    /**
+     * @return Collection<int, Category>
+     */
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function addCategory(Category $category): self
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories->add($category);
+        }
+
+        return $this;
+    }
+
+    public function removeCategory(Category $category): self
+    {
+        $this->categories->removeElement($category);
+
+        return $this;
     }
 }
