@@ -18,12 +18,12 @@ class Comment
     #[ORM\Column(type: Types::TEXT)]
     private ?string $comment = null;
 
-    #[ORM\ManyToOne(inversedBy: 'comments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(inversedBy: 'comments', targetEntity: Post::class)]
+    #[ORM\JoinColumn(nullable: false, referencedColumnName: 'id')]
     private ?Post $post = null;
 
-    #[ORM\ManyToOne(inversedBy: 'comments')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(inversedBy: 'comments', targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false, referencedColumnName: 'id')]
     private ?User $author = null;
 
     #[ORM\Column]
