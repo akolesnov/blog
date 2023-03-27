@@ -3,48 +3,27 @@
 namespace App\Repository;
 
 use App\Entity\Post;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 
-/**
- * @extends ServiceEntityRepository<Post>
- *
- * @method Post|null find($id, $lockMode = null, $lockVersion = null)
- * @method Post|null findOneBy(array $criteria, array $orderBy = null)
- * @method Post[]    findAll()
- * @method Post[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- */
-class PostRepository extends ServiceEntityRepository
+class PostRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private $entityManager;
+
+    private $repository;
+
+    public function __construct(EntityManagerInterface $entityManager)
     {
-        parent::__construct($registry, Post::class);
+        $this->entityManager = $entityManager;
+        $this->repository = $entityManager->getRepository(Post::class);
     }
 
-    public function save(Post $entity, bool $flush = false): void
+    public function add(Post $post): void
     {
-        $this->getEntityManager()->persist($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
+        $this->entityManager->persist($post);
     }
 
-    public function remove(Post $entity, bool $flush = false): void
+    public function findOneBySlug(string $slug)
     {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
-
-    public function searchByQuery(string $query)
-    {
-        return $this->createQueryBuilder('p')
-            ->where('p.title LIKE :query')
-            ->setParameter('query', '%'. $query . '%')
-            ->getQuery()
-            ->getResult();
+        return $this->repository->findOneBy(['slug' => $slug]);
     }
 }
