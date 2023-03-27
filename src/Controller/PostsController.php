@@ -9,12 +9,12 @@ use App\Entity\Post;
 use App\Form\CommentType;
 use App\Form\PostType;
 use App\Repository\PostRepository;
-use Cocur\Slugify\Slugify;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class PostsController extends AbstractController
 {
@@ -22,10 +22,13 @@ class PostsController extends AbstractController
 
     private $entityManager;
 
-    public function __construct(PostRepository $postRepository, EntityManagerInterface $entityManager)
+    private $slugger;
+
+    public function __construct(PostRepository $postRepository, EntityManagerInterface $entityManager, SluggerInterface $slugger)
     {
         $this->postRepository = $postRepository;
         $this->entityManager = $entityManager;
+        $this->slugger = $slugger;
     }
 
     #[Route('/posts', name: 'blog_posts')]
@@ -39,14 +42,14 @@ class PostsController extends AbstractController
     }
 
     #[Route('/posts/new', name: 'new_blog_post')]
-    public function addPost(Request $request, Slugify $slugify, ): Response
+    public function addPost(Request $request): Response
     {
         $post = new Post();
         $form = $this->createForm(PostType::class, $post);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $post->setSlug($slugify->slugify($post->getTitle()));
+            $post->setSlug($this->slugger->slug($post->getTitle()));
             $post->setCreatedAt(new \DateTime());
 
             $this->entityManager->persist($post);
@@ -79,13 +82,13 @@ class PostsController extends AbstractController
     }
 
     #[Route('/posts/{slug}/edit', name: 'blog_post_edit')]
-    public function edit(Post $post, Request $request, Slugify $slugify): Response
+    public function edit(Post $post, Request $request): Response
     {
         $form = $this->createForm(PostType::class, $post);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $post->setSlug($slugify->slugify($post->getTitle()));
+            $post->setSlug($this->slugger->slug($post->getTitle()));
             $this->entityManager->flush();
 
             return $this->redirectToRoute('blog_show', [
